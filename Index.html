@@ -1,0 +1,135 @@
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    input {
+      width: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100px;
+      height: 40px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3C9F40;
+    }
+
+    #result {
+      margin-top: 20px;
+    }
+
+    #comment {
+      font-size: 18px;
+      font-style: italic;
+    }
+
+    #author {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Random YouTube Comment Picker</h1>
+  <p>Enter a YouTube video link and click the button to pick a random comment.</p>
+  <input id="videoLink" type="text" placeholder="Enter YouTube video link here">
+  <button id="pickButton" onclick="pickComment()">Pick Comment</button>
+  <div id="result"></div>
+  <script>
+    // This is the API key for accessing YouTube Data API v3
+    var apiKey = 'AIzaSyC679dlj4st1IGKKAA7m3sXGBfNk-V5OL4';
+
+    // This function extracts the video ID from a YouTube link
+    function getVideoId(link) {
+      // Check if the link is valid
+      if (link == "") {
+        return null;
+      }
+
+      // Extract the video ID from the link using a regular expression
+      var regex = /v=([^?&]+)/; // This matches the part after "v=" and before "?" or "&" if any
+      var match = regex.exec(link); // This returns an array of matches or null if no match
+      if (match == null) {
+        return null;
+      }
+      var videoId = match[1]; // This is the video ID
+      return videoId;
+    }
+
+    // This function picks a random comment from a YouTube video
+    function pickComment() {
+      // Get the video link from the input field
+      var videoLink = document.getElementById("videoLink").value;
+
+      // Get the video ID from the link using the getVideoId function
+      var videoId = getVideoId(videoLink);
+
+      // Check if the video ID is valid
+      if (videoId == null) {
+        alert("Please enter a valid YouTube video link.");
+        return;
+      }
+
+      // Clear the previous result
+      document.getElementById("result").innerHTML = "";
+
+      // Construct the API request URL
+      var url = 'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=' + videoId + '&key=' + apiKey;
+
+      // Make an AJAX call to the API
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onload = function() {
+        // Parse the response as JSON
+        var response = JSON.parse(this.responseText);
+
+        // Check if the response is successful
+        if (response.error) {
+          alert("Error: " + response.error.message);
+          return;
+        }
+
+        // Check if there are any comments
+        if (response.items.length == 0) {
+          alert("No comments found for this video.");
+          return;
+        }
+
+        // Pick a random comment from the response
+        var index = Math.floor(Math.random() * response.items.length);
+        var comment = response.items[index].snippet.topLevelComment.snippet;
+
+        // Display the comment, author name and avatar on the page
+        document.getElementById("result").innerHTML =
+          '<p id="comment">"' + comment.textDisplay + '"</p>' +
+          '<p id="author">' + comment.authorDisplayName + '</p>' +
+          '<img id="avatar" src="' + comment.authorProfileImageUrl + '">';
+      };
+      xhr.send();
+    }
+  </script>
+</body>
+</html>
